@@ -56,7 +56,7 @@ export class HtmlMailSender {
     const mailOptions: MailOptions = {
       from: ` ${this.mailConfiguration.name} <${this.mailConfiguration.username}>`,
       to: to,
-      subject: htmlFile.title,
+      subject: htmlFile.getTitle(),
       html: htmlToSend,
     };
 
