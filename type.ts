@@ -1,6 +1,6 @@
 export interface MailConfigContentTypes {
   fileExtension: string;
-  title: string;
+  getTitle: (options?: { customTitle?: string }) => string;
 }
 
 export interface MailConfigTypes {
