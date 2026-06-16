@@ -14,6 +14,11 @@ export type MailConfiguration = {
   host: string;
   port: number;
   secure: boolean;
+  pool?: boolean;
+  maxConnections?: number;
+  maxMessages?: number;
+  rateDelta?: number;
+  rateLimit?: number;
 };
 
 export type MailOptions = {
@@ -36,4 +41,12 @@ export type EmailDeliveryResponse = {
     to: string[];
   };
   messageId: string;
+};
+
+export type SendMailResult = {
+  success: boolean;
+  messageId?: string;
+  accepted: string[];
+  rejected: string[];
+  response?: string;
 };

@@ -13,8 +13,8 @@ npm install html-mail-sender
 ### Import the Package
 
 ```js
-import { sendMail } from "html-mail-sender";
-import { MailConfigTypes, UserMailConfigTypes } from "html-mail-sender/type";
+import { HtmlMailSender } from "html-mail-sender";
+import { MailConfigTypes } from "html-mail-sender/type";
 ```
 
 ### Define Email Requests
@@ -25,15 +25,15 @@ Create an object with different email types, specifying the file extension of th
 const MailTypes: MailConfigTypes = {
   ApplicationReceived: {
     fileExtension: "./template/mail/application-received.html",
-    title: "Thank You For Visit Us.",
+    getTitle: () => "Thank You For Visit Us.",
   },
   EMailVerification: {
     fileExtension: "./template/mail/email-verification.html",
-    title: "E Mail Verification",
+    getTitle: () => "E Mail Verification",
   },
   LoginSuccessful: {
     fileExtension: "./template/mail/login-successful.html",
-    title: "Login Successful",
+    getTitle: () => "Login Successful",
   },
   // ... other mail types...
 };
@@ -61,16 +61,33 @@ const htmlMailSender = new HtmlMailSender({
   password: "YOUR_EMAIL_PASSWORD",
   username: "YOUR_EMAIL_USERNAME",
   host: "smtp.gmail.com",
-  port: "YOUR_EMAIL_PORT",
+  port: 587,
   name: "YOUR_EMAIL_NAME",
-  secure:"YOUR_EMAIL_SECURE",, // true for 465, false for other ports
+  secure: false, // true for 465, false for other ports
+  pool: true,
+  maxConnections: 2,
+  maxMessages: 100,
+  rateDelta: 1000,
+  rateLimit: 1,
 });
 
-htmlMailSender.sendMail(
+const isSent = await htmlMailSender.sendMail(
   "TO_EMAIL",
   MailTypes.ApplicationReceived,
   mailRequest
 );
+```
+
+Use `sendMailDetailed` when you need the SMTP delivery metadata.
+
+```js
+const result = await htmlMailSender.sendMailDetailed(
+  "TO_EMAIL",
+  MailTypes.ApplicationReceived,
+  mailRequest
+);
+
+console.log(result.messageId, result.accepted, result.rejected);
 ```
 
 ## HTML Templates

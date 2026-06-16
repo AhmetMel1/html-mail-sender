@@ -1,4 +1,15 @@
 "use strict";
+var __assign = (this && this.__assign) || function () {
+    __assign = Object.assign || function(t) {
+        for (var s, i = 1, n = arguments.length; i < n; i++) {
+            s = arguments[i];
+            for (var p in s) if (Object.prototype.hasOwnProperty.call(s, p))
+                t[p] = s[p];
+        }
+        return t;
+    };
+    return __assign.apply(this, arguments);
+};
 var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
     if (k2 === undefined) k2 = k;
     var desc = Object.getOwnPropertyDescriptor(m, k);
@@ -69,52 +80,76 @@ var nodemailer = __importStar(require("nodemailer"));
 var HtmlMailSender = /** @class */ (function () {
     function HtmlMailSender(mailConfiguration) {
         this.mailConfiguration = mailConfiguration;
+        var transportOptions = {
+            host: this.mailConfiguration.host,
+            port: this.mailConfiguration.port,
+            secure: this.mailConfiguration.secure,
+            auth: {
+                user: this.mailConfiguration.username,
+                pass: this.mailConfiguration.password,
+            },
+        };
+        if (this.mailConfiguration.pool) {
+            var poolTransportOptions = __assign(__assign({}, transportOptions), { pool: true, maxConnections: this.mailConfiguration.maxConnections, maxMessages: this.mailConfiguration.maxMessages, rateDelta: this.mailConfiguration.rateDelta, rateLimit: this.mailConfiguration.rateLimit });
+            this.transporter = nodemailer.createTransport(poolTransportOptions);
+        }
+        else {
+            this.transporter = nodemailer.createTransport(transportOptions);
+        }
     }
     HtmlMailSender.prototype.sendMail = function (to, htmlFile, mailRequest) {
         return __awaiter(this, void 0, void 0, function () {
-            var isSent, html, template, replacements, key, htmlToSend, transporter, mailOptions;
+            var result, error_1;
             return __generator(this, function (_a) {
-                isSent = true;
-                html = "";
-                try {
-                    html = fs.readFileSync(htmlFile.fileExtension, {
-                        encoding: "utf-8",
-                    });
+                switch (_a.label) {
+                    case 0:
+                        _a.trys.push([0, 2, , 3]);
+                        return [4 /*yield*/, this.sendMailDetailed(to, htmlFile, mailRequest)];
+                    case 1:
+                        result = _a.sent();
+                        return [2 /*return*/, result.success];
+                    case 2:
+                        error_1 = _a.sent();
+                        return [2 /*return*/, false];
+                    case 3: return [2 /*return*/];
                 }
-                catch (error) {
-                    isSent = false;
+            });
+        });
+    };
+    HtmlMailSender.prototype.sendMailDetailed = function (to, htmlFile, mailRequest) {
+        return __awaiter(this, void 0, void 0, function () {
+            var html, template, replacements, key, htmlToSend, mailOptions, info, accepted, rejected;
+            return __generator(this, function (_a) {
+                switch (_a.label) {
+                    case 0:
+                        html = fs.readFileSync(htmlFile.fileExtension, {
+                            encoding: "utf-8",
+                        });
+                        template = handlebars_1.default.compile(html);
+                        replacements = {};
+                        for (key in mailRequest) {
+                            replacements[key] = mailRequest[key];
+                        }
+                        htmlToSend = template(replacements);
+                        mailOptions = {
+                            from: " ".concat(this.mailConfiguration.name, " <").concat(this.mailConfiguration.username, ">"),
+                            to: to,
+                            subject: htmlFile.getTitle({ customTitle: mailRequest.customTitle }),
+                            html: htmlToSend,
+                        };
+                        return [4 /*yield*/, this.transporter.sendMail(mailOptions)];
+                    case 1:
+                        info = (_a.sent());
+                        accepted = info.accepted || [];
+                        rejected = info.rejected || [];
+                        return [2 /*return*/, {
+                                success: accepted.length > 0 && rejected.length === 0,
+                                messageId: info.messageId,
+                                accepted: accepted,
+                                rejected: rejected,
+                                response: info.response,
+                            }];
                 }
-                if (!isSent) {
-                    return [2 /*return*/, isSent];
-                }
-                template = handlebars_1.default.compile(html);
-                replacements = {};
-                for (key in mailRequest) {
-                    replacements[key] = mailRequest[key];
-                }
-                htmlToSend = template(replacements);
-                transporter = nodemailer.createTransport({
-                    host: this.mailConfiguration.host,
-                    port: this.mailConfiguration.port,
-                    secure: this.mailConfiguration.secure,
-                    auth: {
-                        user: this.mailConfiguration.username,
-                        pass: this.mailConfiguration.password,
-                    },
-                });
-                mailOptions = {
-                    from: " ".concat(this.mailConfiguration.name, " <").concat(this.mailConfiguration.username, ">"),
-                    to: to,
-                    subject: htmlFile.getTitle(),
-                    html: htmlToSend,
-                };
-                transporter.sendMail(mailOptions, function (error, info) {
-                    if (error) {
-                        isSent = false;
-                    }
-                    isSent = true;
-                });
-                return [2 /*return*/, isSent];
             });
         });
     };
